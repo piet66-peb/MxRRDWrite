@@ -1,0 +1,180 @@
+
+{
+
+    "singleton": false,
+    "dependencies": [
+        "MxBaseModule"
+    ],
+    "category": "logging",
+    "author": "piet66",
+    "homepage": "",
+    "icon": "icon.png",
+    "moduleName": "MxRRDWrite",
+    "version": "1.2.0",
+    "maturity": "stable",
+    "repository": {
+        "type": "",
+        "source": ""
+    },
+    "defaults": {
+        "title": "__m_title__",
+        "description": "__m_descr__",
+        "logging": true,
+        "server_host": "__host_default__",
+        "server_username": "__username_default__",
+        "server_port": "__port_default__",
+        "server_password": "__password_default__",
+        "COMMENT": "remaining defaults are defined in postRender.js"
+    },
+    "schema": {
+        "type": "object",
+        "properties": {
+            "logging": {
+                "type": "boolean"
+            },
+
+            "server": {
+                "type": "object",
+                "properties": {
+                    "host": {
+                        "required": true
+                    },
+                    "port": {
+                        "required": true
+                    },
+                    "username": {
+                        "required": true
+                    },
+                    "password": {
+                        "required": true
+                    }
+                }
+            },
+
+            "rrd": {
+                "type": "object",
+                "properties": {
+                    "database_name": {
+                        "required": true
+                    },
+                    "poll_period": {
+                        "required": false
+                    },
+                    "least_poll_period": {
+                        "required": true,
+                        "type": "integer",
+                        "minimum":0
+                    }
+                }
+            },
+
+            "sensors": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                    "properties": {
+                        "id": {
+                            "field": "enum",
+                            "datasource": "namespaces",
+                            "enum": "namespaces:devices_all:deviceId",
+                            "required": true
+                        },
+                        "metric": {
+                            "required": false,
+                            "type": "string"
+                        },
+                        "arithmetic": {
+                            "type": "string",
+                            "required": false
+                        }
+                    },
+                    "type": "object",
+                    "required": true
+                }
+            }
+        }
+    },
+    "options": {
+        "fields": {
+            "logging": {
+                "type": "checkbox",
+                "rightLabel": "__logging__"
+            },
+
+            "server": {
+                "fieldClass": "objectClass",
+                "label": "__server__",
+                "fields": {
+                    "host": {
+                        "label": "__host__",
+                        "helper": "__host_helper__"
+                    },
+                    "port": {
+                        "label": "__port__"
+                    },
+                    "username": {
+                        "label": "__username__"
+                    },
+                    "password": {
+                        "label": "__password__"
+                    }
+                }
+            },
+
+            "rrd": {
+                "fieldClass": "objectClass",
+                "label": "__rrd__",
+                "fields": {
+                    "database_name": {
+                        "label": "__database_name__",
+                        "helper": "__database_name_helper__"
+                    },
+                    "poll_period": {
+                        "label": "__poll_period__"
+                    },
+                    "least_poll_period": {
+                        "label": "__least_poll_period__",
+                        "helper": "__least_poll_period_helper__"
+                    }
+                 }
+            },
+
+            "sensors": {
+                "label": "__sensors__",
+                "helper": "__sensors-helper__",
+                "fieldClass": "sensorsArray",
+                "items": {
+                    "fieldClass": "sensorsFields",
+                    "fields": {
+                        "id": {
+                            "fieldClass": "id",
+                            "label": "__id__",
+                            "removeDefaultNone": false,
+                            "noneLabel": "__choose__",
+                            "type": "select",
+                            "datasource": "namespaces",
+                            "field": "optionLabels",
+                            "optionLabels": "namespaces:devices_all:deviceName"
+                        },
+                        "metric": {
+                            "fieldClass": "metric",
+                            "label": "__metric__",
+                            "helper": "__metric-helper__"
+                        },
+                        "arithmetic": {
+                            "fieldClass": "arithmetic",
+                            "label": "__arithmetic__",
+                            "helpers": [
+                                "__arithmetic_helper__",
+                                "__arithmetic_helper2__"
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "postRender": "loadFunction:postRender.js"
+
+}
+

@@ -1,0 +1,35 @@
+
+{
+    "m_title": "MxRRDWrite",
+    "m_descr": "Stores sensor value data to a round-robin database created with <a href='https://oss.oetiker.ch/rrdtool' target='_blank'><u><font color=blue>RRDtool</font></u></a>. <br><br>For database access the module uses RRDTool_API. Download and install it from <a href='https://github.com/piet66-peb?tab=repositories' target='_blank'><u><font color=blue>GitHub</font></u></a>.",
+    "logging": "Info messages to log file",
+
+    "server": "RRD API",
+    "host": "Host",
+    "host_helper": "hostname or ip address.",
+    "host_default": "db_server",
+    "port": "Port",
+    "port_default": "5001",
+    "username": "Username",
+    "username_default": "username",
+    "password": "Password",
+    "password_default": "secret",
+
+    "rrd": "RRD Database",
+    "database_name": "Database Name",
+    "database_name_helper": "filename without suffix.",
+    "poll_period": "Write Interval",
+    "least_poll_period": "Least Write Interval (seconds)",
+    "least_poll_period_helper": "To avoid high frequency polling.",
+
+    "sensors": "Sensor Device List",
+    "sensors-helper": "Add sensors in same order as defined in the RRD Database.",
+    "choose": "select device",
+    "id": "Sensor Device",
+    "metric": "Sensor Metric",
+    "metric-helper": "default: 'level'.",
+    "arithmetic": "Arithmetic Operation",
+    "arithmetic_helper": "Javascript formula (optional), x=current value.",
+    "arithmetic_helper2": "'on','off' is converted to 1,0 by default."
+}
+
