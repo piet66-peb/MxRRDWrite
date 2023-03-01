@@ -1,4 +1,4 @@
-/*** MxRRDWrite V1.2.0 2023-01-24 Z-Way HA module *********************************/
+/*** MxRRDWrite V1.2.1 2023-02-28 Z-Way HA module *********************************/
 
 //h-------------------------------------------------------------------------------
 //h
@@ -13,8 +13,11 @@
 //h Resources:    MxBaseModule
 //h Issues:       
 //h Authors:      peb piet66
-//h Version:      V1.2.0 2023-01-24/peb
+//h Version:      V1.2.1 2023-02-28/peb
 //v History:      V1.0.0 2022-12-06/peb first version
+//v               V1.2.1 2023-02-27/peb [x]expected 12 data source readings (got 11)
+//v                                        (Niveau missing)
+//v                                        inserted 'U' for missing value
 //v               [x]fixed
 //v               [*]reworked, changed
 //v               [-]removed
@@ -39,8 +42,8 @@ function MxRRDWrite(id, controller) {
     MxRRDWrite.super_.call(this, id, controller);
 
     this.MODULE = 'index.js';
-    this.VERSION = 'V1.2.0';
-    this.WRITTEN = '2023-01-24/peb';
+    this.VERSION = 'V1.2.1';
+    this.WRITTEN = '2023-02-28/peb';
 
     this.host = undefined;
     this.port = undefined;
@@ -270,8 +273,11 @@ MxRRDWrite.prototype.collect_values = function() {
     //-----------------
     var valuestring, sensor_value, errtext;
     for (var i = 0; i < self.sensors.length; i++) {
+        sensor_value = undefined;
+        errtext = undefined;
         var sensor = self.sensors[i];
         var vDev = self.controller.devices.get(sensor.id);
+        self.log('i', i, 'sensor.id', sensor.id);
 
         //b read current sensor value
         //---------------------------
@@ -285,12 +291,12 @@ MxRRDWrite.prototype.collect_values = function() {
             self.notifyError(err);
             errtext = ["read sensor value", sensor.id, sensor.metric, sensor.title].join(', ');
             self.notifyError(errtext);
-            throw err;
+            sensor_value = 'U';
         }
 
         //b execute arithmetics
         //---------------------
-        if (sensor.arithmetic) {
+        if (sensor_value !== 'U' && sensor.arithmetic) {
             var x = sensor_value;
             try {
                 /*jshint evil: true */
@@ -298,40 +304,68 @@ MxRRDWrite.prototype.collect_values = function() {
                 /*jshint evil: false */
             } catch (err) { //err = empty object
                 //self.notifyError(err);
-                errtext = ["eval sensor value", sensor.id, sensor.arithmetic, sensor.title].join(', ');
+                errtext = ["eval sensor value", sensor.id, sensor.arithmetic, 
+                           sensor.title].join(', ');
                 self.notifyError(errtext);
-                throw errtext;
+                sensor_value = 'U';
             }
         }
-        if (sensor_value === 'on') {
-            sensor_value = 1;
-        } else 
-        if (sensor_value === 'off') {
-            sensor_value = 0;
-        } else  {
-            var sv = sensor_value;
-            sensor_value = Number(sensor_value);
-            if (isNaN(sensor_value)) {
-                errtext = ['sensor value "'+sv+'" is not a number', sensor.id, sensor.metric, sensor.title].join(', ');
+
+        //b check for valid value
+        //-----------------------
+        if (sensor_value === undefined || sensor_value !== 'U') {
+            if (sensor_value === undefined) {
+                errtext = ['sensor value is undefined', sensor.id, sensor.metric, 
+                           sensor.title].join(', ');
                 self.notifyError(errtext);
-                throw errtext;
+                sensor_value = 'U';
+            } else
+            if (typeof(sensor_value) === 'string' && sensor_value.trim() === '') {
+                errtext = ['sensor value is empty', sensor.id, sensor.metric, 
+                           sensor.title].join(', ');
+                self.notifyError(errtext);
+                sensor_value = 'U';
+            } else
+            if (sensor_value === 'on') {
+                sensor_value = 1;
+            } else 
+            if (sensor_value === 'off') {
+                sensor_value = 0;
+            } else  {
+                var sv = sensor_value;
+                sensor_value = Number(sensor_value);
+                if (isNaN(sensor_value)) {
+                    errtext = ['sensor value "'+sv+'" is not a number', sensor.id, 
+                               sensor.metric, sensor.title].join(', ');
+                    self.notifyError(errtext);
+                    sensor_value = 'U';
+                }
             }
         }
-        if (valuestring) {
+
+        //b add value to value string
+        //---------------------------
+        if (valuestring !== undefined) {
             valuestring += ':'+sensor_value;
         } else {
             valuestring = sensor_value;
         }
+        self.log('valuestring', valuestring, 'sensor_value', sensor_value);
     } //sensors.forEach
 
     //b send data to database
     //-----------------------
-    var ts = self.next;
-    self.log('ts', ts, self.userTime(ts));
-    var query_string = '?ts='+ts+'&values='+valuestring;
-    self.ajax_post(self.url_update+query_string, 'empty by intention',
-                                                 'data written', 
-                                                 'RRDTool_API update response');
+    if (valuestring !== undefined) {
+        var ts = self.next;
+        self.log('ts', ts, self.userTime(ts));
+        var query_string = '?ts='+ts+'&values='+valuestring;
+        self.ajax_post(self.url_update+query_string, 'empty by intention',
+                                                     'data written', 
+                                                     'RRDTool_API update response');
+    } else {
+        errtext = '!!!! no sensor values read !!!!';
+        self.notifyError(errtext);
+    }
 
     //b compute delay for next timer run
     //----------------------------------
@@ -367,7 +401,8 @@ MxRRDWrite.prototype.ajax_post = function(url, data, success, failure) {
             response.status === 900 && 
             (response.statusText.indexOf('database is locked') >= 0 ||
              err_text.indexOf('database is locked') >= 0)) {
-            self.notifyConnectionFault(url+' '+response.status+' '+response.statusText+' '+err_text);
+            self.notifyConnectionFault(url+' '+response.status+' '+
+                                       response.statusText+' '+err_text);
             if (typeof failure === 'function') {
                 failure(response);
             } else {

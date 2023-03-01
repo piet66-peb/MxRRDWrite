@@ -7,14 +7,14 @@
     ],
     "category": "logging",
     "author": "piet66",
-    "homepage": "",
+    "homepage": "https://github.com/piet66-peb?tab=repositories",
     "icon": "icon.png",
     "moduleName": "MxRRDWrite",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "maturity": "stable",
     "repository": {
-        "type": "",
-        "source": ""
+        "type": "git",
+        "source": "https://github.com/piet66-peb/MxRRDWrite"
     },
     "defaults": {
         "title": "__m_title__",
